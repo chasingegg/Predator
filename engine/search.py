@@ -1,5 +1,6 @@
 import sqlite3
 import jieba
+import operator
 import configparser
 import math
 
@@ -44,19 +45,19 @@ class SearchEngine:
 
     def fetch(self, keyword):
         c = self.conn.cursor()
-        c.execute('SELECT * FROM postings WHERE term=?', (term, ))
+        c.execute('SELECT * FROM postings WHERE term=?', (keyword, ))
         return (c.fetchone())
 
     def BM25(self, sentence):
         seg_list = jieba.lcut(sentence, cut_all=False)
-        n, cleaned_dict = self.clean_list(seg_list)
+        n, cleaned_dict = self.clean_list(seg_list)  # get query terms
         BM25_scores = dict()
 
         for term in cleaned_dict.keys():
             r = self.fetch(term)
             if r is None:
                 continue
-            df = r[1]
+            df = r[1]   # doc nums which contain this term
             w = math.log2((self.N - df + 0.5) / (df + 0.5))
             docs = r[2].split('\n')
             for doc in docs:
@@ -69,9 +70,13 @@ class SearchEngine:
                     BM25_scores[docid] = BM25_scores[docid] + s
                 else:
                     BM25_scores[docid] = s
-        BM25_scores = sorted(BM25_scores.items(), key = operator.itemgetter(1))
-        BM25_scores.reverse()
+        BM25_scores = sorted(BM25_scores.items(), key = operator.itemgetter(1), reverse=True)
         if len(BM25_scores) == 0:
             return 0, []
         else:
             return 1, BM25_scores
+
+if __name__ == '__main__':
+    engine = SearchEngine("./config.ini", "utf-8")
+    f, score = engine.BM25("篮球的梦想")
+    print(f, len(score))

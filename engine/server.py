@@ -18,9 +18,7 @@ def keyword_query(content):
 def ques_query(content):
     return 'Ques_Query %s' % content
 
-@app.route('/photo/', methods=['get', 'post'])
-def up_photo():
-    img = request.files.get
 
 if __name__ == '__main__':
+    
     app.run()
