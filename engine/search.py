@@ -3,6 +3,7 @@ import jieba
 import operator
 import configparser
 import math
+import time
 
 class SearchEngine:
     def __init__(self, config_path, config_encoding):
@@ -13,7 +14,7 @@ class SearchEngine:
         with open(config['DEFAULT']['stop_words_path'], encoding=config['DEFAULT']['stop_words_encoding']) as f:
             words = f.read()
             self.stop_words = set(words.split('\n'))
-        self.conn = sqlite3.connect(config['DEFAULT']['db_path'])
+        self.conn = sqlite3.connect(config['DEFAULT']['db_path'],check_same_thread = False)
         self.N = int(config['DEFAULT']['n'])
         self.K1 = float(config['DEFAULT']['k1'])
         self.B = float(config['DEFAULT']['b'])
@@ -46,7 +47,9 @@ class SearchEngine:
     def fetch(self, keyword):
         c = self.conn.cursor()
         c.execute('SELECT * FROM postings WHERE term=?', (keyword, ))
-        return (c.fetchone())
+        data = c.fetchone()
+        c.close()
+        return data
 
     def BM25(self, sentence):
         seg_list = jieba.lcut(sentence, cut_all=False)
@@ -78,5 +81,5 @@ class SearchEngine:
 
 if __name__ == '__main__':
     engine = SearchEngine("./config.ini", "utf-8")
-    f, score = engine.BM25("篮球的梦想")
+    f, score = engine.BM25("篮球")
     print(f, len(score))

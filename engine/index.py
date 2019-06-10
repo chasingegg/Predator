@@ -69,7 +69,7 @@ class Index:
         # read baike data into a list
         files = utils.readBaike(config['DEFAULT']['doc_dir_path'], config['DEFAULT']['doc_encoding'])
         avgLen = 0
-        docid = 0
+        docid = -1
         for f in files:
             title = f[0]
             body = f[1]
