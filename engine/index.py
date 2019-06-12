@@ -24,7 +24,8 @@ class Index:
         with open(config['DEFAULT']['stop_words_path'], encoding=config['DEFAULT']['stop_words_encoding']) as f:
             words = f.read()
             self.stop_words = set(words.split('\n'))
-        self.postings_lists = dict()
+        self.postings_lists_baike = dict()
+        self.postings_lists_zhidao = dict()
 
     def is_number(self, s):
         try:
@@ -47,23 +48,39 @@ class Index:
                     cleaned_dict[i] = 1
         return n, cleaned_dict 
 
-    # persist index into database
+    # persist baidu index
     def persist(self, db_path):
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
-        c.execute('''DROP TABLE IF EXISTS postings''')
+        c.execute('''DROP TABLE IF EXISTS baike_postings''')
         # term, number of docs, docs of Doc(docid, cleaned_dict, length of doc)
-        c.execute('''CREATE TABLE postings
+        c.execute('''CREATE TABLE baike_postings
             (term TEXT PRIMARY KEY, df INTEGER, docs TEXT)''')
-        for k, v in self.postings_lists.items():
+        for k, v in self.postings_lists_baike.items():
             doc_list = '\n'.join(map(str, v[1]))
             t = (k, v[0], doc_list)
-            c.execute("INSERT INTO postings VALUES(?, ?, ?)", t)
+            c.execute("INSERT INTO baike_postings VALUES(?, ?, ?)", t)
         conn.commit()
         conn.close()
 
-    def construct_postlings_lists(self):
+    # persist zhidao index
+    def persist(self, db_path):
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+
+        c.execute('''DROP TABLE IF EXISTS zhidao_postings''')
+        # term, number of docs, docs of Doc(docid, cleaned_dict, length of doc)
+        c.execute('''CREATE TABLE zhidao_postings
+            (term TEXT PRIMARY KEY, df INTEGER, docs TEXT)''')
+        for k, v in self.postings_lists_zhidao.items():
+            doc_list = '\n'.join(map(str, v[1]))
+            t = (k, v[0], doc_list)
+            c.execute("INSERT INTO baike_postings VALUES(?, ?, ?)", t)
+        conn.commit()
+        conn.close()
+
+    def construct_postlings_lists_baike(self):
         config = configparser.ConfigParser()
         config.read(self.config_path, self.config_encoding)
         # read baike data into a list
@@ -85,13 +102,40 @@ class Index:
                 else:
                     self.postings_lists[k] = [1, [d]] 
         avgLen = avgLen / len(files)
-        config.set('DEFAULT', 'avg_l', str(avgLen))
-        config.set('DEFAULT', 'N', str(len(files)))
+        config.set('DEFAULT', 'avg_l_baike', str(avgLen))
+        config.set('DEFAULT', 'N_baike', str(len(files)))
         with open(self.config_path, 'w', encoding=self.config_encoding) as configF:
             config.write(configF)
         self.persist(config['DEFAULT']['db_path'])
 
+    def construct_postlings_lists_zhidao(self):
+        config = configparser.ConfigParser()
+        config.read(self.config_path, self.config_encoding)
+        # read baike data into a list
+        files = utils.readZhidao(config['DEFAULT']['doc_dir_path'], config['DEFAULT']['doc_encoding'])
+        avgLen = 0
+        docid = -1
+        for f in files:
+            title = f[0]
+            body = f[1]
+            seg_list = jieba.lcut(title + "。" + body, cut_all=False)
+            ld, cleaned_dict = self.clean_list(seg_list)
+            avgLen = avgLen + ld
+            docid += 1
+            for k, v in cleaned_dict.items():
+                d = Doc(docid, v, ld)
+                if k in self.postings_lists:
+                    self.postings_lists[k][0] = self.postings_lists[k][0] + 1
+                    self.postings_lists[k][1].append(d)
+                else:
+                    self.postings_lists[k] = [1, [d]] 
+        avgLen = avgLen / len(files)
+        config.set('DEFAULT', 'avg_l_zhidao', str(avgLen))
+        config.set('DEFAULT', 'N_zhidao', str(len(files)))
+        with open(self.config_path, 'w', encoding=self.config_encoding) as configF:
+            config.write(configF)
+        self.persist(config['DEFAULT']['db_path'])
 
 if __name__ == '__main__':
     baikeIndex = Index("./config.ini", "utf-8")
-    baikeIndex.construct_postlings_lists()
+    baikeIndex.construct_postlings_lists_baike()
