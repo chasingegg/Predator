@@ -7,6 +7,7 @@ import os
 import json
 import utils
 from search import SearchEngine
+from flask import render_template
 
 app = Flask(__name__)
 CORS(app)
@@ -37,13 +38,12 @@ def search_images(docs):
 # def hello_world():
 #     return "Hello World!"
 
-@app.route('/query', methods=['GET', 'POST'])
-def query():
-    print((request.form))
-    keyword = request.form.get("keyword")
-    qa = request.form.get("qa")
-    img = request.form.get("img")
-    baike = request.form.get("baike")
+def handle_query(args):
+    print(args)
+    keyword = args["q"]
+    qa = args["qaSearch"]
+    img = args["imageSearch"]
+    baike = args["baikeSearch"]
     value = []
     imgL = []
     d = dict()
@@ -70,6 +70,7 @@ def query():
                 ids = ids[:20]
             for id in ids:
                 row = json.loads(ZhidaoData.loc[id].to_json())
+                row['docid'] = id
                 row['type'] = 0
                 row['text'] = row['text'].strip()
                 if (len(row['text'])) > 50:
@@ -84,11 +85,48 @@ def query():
                 imgL = search_images(ids)
 
     d['link'] = value
-    d['img'] = imgL
+    d['img'] = ["http://10.162.167.234/images/" + imgL[i] for i in range(len(imgL))]
     print(d)
-    return jsonify(d)
+    return d
+    
+def wiki_content(args):
+    row = json.loads(BaikeData.loc[args].to_json())
+    imgL = search_images([args])
+    if (len(imgL) > 0):
+        row['img'] = "http://10.162.167.234/images/" + imgL[0]
+    else:
+        row['img'] = ""
+    print(row['text'])
+    return row
 
+def qa_content(args):
+    docid = args
 
+    # zhidao data
+    row = json.loads(ZhidaoData.loc[docid].to_json())
+    ansStr = row['text'].strip()
+    best_start = ansStr.find('最佳答案')
+    ans_count = ansStr.find('回答')
+    ans_start = 0
+    str_list = []
+    if ans_count == 0:
+        str_list.append(ansStr)
+    else:
+        for i in range(ans_count):
+            ind = ansStr.find('回答', ans_start)
+            if is_number(ansStr[ind+2 : ind+3]) == True:
+                if i == 0:
+                    str_list.append(ansStr[best_start: ind])
+                    ans_start = ind
+                elif i == ans_count -1:
+                    str_list.append(ansStr[ans_start: ind])
+                    str_list.append(ansStr[ind:])
+                else:
+                    str_list.append(ansStr[ans_start: ind])
+
+    row['text'] = str_list   
+    return row  
+    
 @app.route('/detail', methods=['GET', 'POST'])
 def detail():
     docid = request.form.get('docid')
@@ -127,6 +165,64 @@ def detail():
 # def ques_query(content):
 #     return 'Ques_Query %s' % content
 
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def keyword_query():
+    query = request.form.to_dict()
+    for c in ['baikeSearch', 'qaSearch', 'imageSearch']:
+        if c in query:
+            query[c] = True
+        else:
+            query[c] = False
+
+    results = handle_query(query)
+
+    # put img on the search result
+    have_img = query['imageSearch'] and len(results['img'])
+
+    # initialize for first one
+    img_dicts = []
+    if have_img:
+        tmp = {'class': 'carousel-item active', 'img': []}
+        for i in range(len(results['img'])):
+            if i != 0 and i % 3 == 0:
+                img_dicts.append(tmp)
+                tmp = {'class': 'carousel-item', 'img': []}
+            tmp['img'].append(results['img'][i])
+
+        if len(results['img']) % 3 != 0:
+            img_dicts.append(tmp)
+
+    # build href for each link
+    for i in range(len(results['link'])):
+        if results['link'][i]['type']:
+            results['link'][i]['href'] = '/wiki?docid=' + str(results['link'][i]['docid'])
+        else:
+            results['link'][i]['href'] = '/qa?docid=' + str(results['link'][i]['docid'])
+
+    return render_template('search.html', keyword=query['q'], check_box=query, have_img=have_img,
+                           img_dicts=img_dicts, links=results['link'])
+
+
+@app.route('/qa', methods=['GET', 'POST'])
+def build_qa():
+    id = int(request.args.get('docid'))
+    result = qa_content(id)
+    print(result)
+    answers = [{'title': 'Answer ' + str(i), 'content': result['text'][i]} for i in range(len(result['text']))]
+    return render_template('QA.html', question=result['keyword'], answers=answers, length=len(answers))
+
+
+@app.route('/wiki', methods=['GET', 'POST'])
+def build_wiki():
+    id = int(request.args.get('docid'))
+    result = wiki_content(id)
+    return render_template('wiki.html', title=result['keyword'], img=result['img'], content=result['text'])
 
 
 if __name__ == '__main__':

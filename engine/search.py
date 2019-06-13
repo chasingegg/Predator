@@ -70,7 +70,7 @@ class SearchEngine:
         BM25_scores = dict()
 
         for term in cleaned_dict.keys():
-            r = self.fetch(term)
+            r = self.fetch_baike(term)
             if r is None:
                 continue
             df = r[1]   # doc nums which contain this term
@@ -98,7 +98,7 @@ class SearchEngine:
         BM25_scores = dict()
 
         for term in cleaned_dict.keys():
-            r = self.fetch(term)
+            r = self.fetch_zhidao(term)
             if r is None:
                 continue
             df = r[1]   # doc nums which contain this term

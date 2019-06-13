@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doogle Search</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div>
+        <!-- search box-->
+        <div class="navbar-light">
+            <form action="http://localhost:3003/search" method="post">
+<!--            <form action="search.html">-->
+                <div class="container-fluid form-inline">
+                    <img src="/static/doogle.png" class="col-auto" width="81" height="27">
+                    <input type="search" class="form-control rounded-pill col-auto w-50" name="q" value="{{keyword}}">
+                </div>
+                <div class="w-75 mx-auto">
+                    {% if check_box['baikeSearch'] %}
+                    <input class="col-auto" type="checkbox" name="baikeSearch" value="true" checked> Baike
+                    {% else %}
+                    <input class="col-auto" type="checkbox" name="baikeSearch" value="true"> Baike
+                    {% endif %}
+
+                    {% if check_box['qaSearch'] %}
+                    <input class="col-auto" type="checkbox" name="qaSearch" value="true" checked > QA
+                    {% else %}
+                    <input class="col-auto" type="checkbox" name="qaSearch" value="true" > QA
+                    {% endif %}
+
+                    {% if check_box['imageSearch'] %}
+                    <input class="col-auto" type="checkbox" name="imageSearch" value="true" checked> Image
+                    {% else %}
+                    <input class="col-auto" type="checkbox" name="imageSearch" value="true"> Image
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- result-->
+        <div>
+            <!--image if have -->
+            {% if have_img %}
+            <div  id="imageControls" class="carousel slide ml-3 shadow" data-ride="carousel">
+                <div class="carousel-inner"  id="imgResult">
+                    {% for id in img_dicts %}
+                    <div class="{{id['class']}}">
+                        {% for img in id['img'] %}}
+                        <img src="{{img}}" width="300" height="300" class="img-thumbnail mx-auto" >
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+<!--                control button, copy from bootstrap-->
+                <a class="carousel-control-prev" href="#imageControls" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#imageControls" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- other result -->
+            <div class="container-fluid mt-3" id="linkResult">
+                {% for l in links %}
+                <div class="ml-5">
+                    <a href="{{l['href']}}">{{l['keyword']}}</a>
+                    <p>{{l['text']}}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
