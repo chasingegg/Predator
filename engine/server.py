@@ -51,10 +51,16 @@ def handle_query(args):
         f, score = engine.BM25_baike(keyword)
         if f > 0:
             ids = [i for i, d in score]
-            if f > 30:
-                ids = ids[:30]
+            if f > 20:
+                ids = ids[:20]
+            No_overlap = set()
             for id in ids:
                 row = json.loads(BaikeData.loc[id].to_json())
+                len_b = len(No_overlap)
+                No_overlap.add(row['keyword'])
+                len_a = len(No_overlap)
+                if len_b == len_a:
+                    continue
                 row['type'] = 1
                 if len(row['text']) > 50:
                     row['text'] = row['text'][:50]
@@ -105,6 +111,7 @@ def qa_content(args):
     # zhidao data
     row = json.loads(ZhidaoData.loc[docid].to_json())
     ansStr = row['text'].strip()
+    print(ansStr)
     best_start = ansStr.find('最佳答案')
     ans_count = ansStr.find('回答')
     ans_start = 0
@@ -113,16 +120,16 @@ def qa_content(args):
         str_list.append(ansStr)
     else:
         for i in range(ans_count):
-            ind = ansStr.find('回答', ans_start)
+            ind = ansStr.find('回答', ans_start+2)
             if is_number(ansStr[ind+2 : ind+3]) == True:
                 if i == 0:
                     str_list.append(ansStr[best_start: ind])
-                    ans_start = ind
                 elif i == ans_count -1:
                     str_list.append(ansStr[ans_start: ind])
                     str_list.append(ansStr[ind:])
                 else:
                     str_list.append(ansStr[ans_start: ind])
+                ans_start = ind
 
     row['text'] = str_list   
     return row  
