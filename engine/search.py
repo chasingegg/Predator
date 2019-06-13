@@ -90,7 +90,7 @@ class SearchEngine:
         if len(BM25_scores) == 0:
             return 0, []
         else:
-            return 1, BM25_scores
+            return len(BM25_scores), BM25_scores
     
     def BM25_zhidao(self, sentence):
         seg_list = jieba.lcut(sentence, cut_all=False)
@@ -118,7 +118,8 @@ class SearchEngine:
         if len(BM25_scores) == 0:
             return 0, []
         else:
-            return 1, BM25_scores
+            return len(BM25_scores), BM25_scores
+
 
 if __name__ == '__main__':
     engine = SearchEngine("./config.ini", "utf-8")

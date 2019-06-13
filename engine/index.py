@@ -49,7 +49,7 @@ class Index:
         return n, cleaned_dict 
 
     # persist baidu index
-    def persist(self, db_path):
+    def persist_baidu(self, db_path):
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
@@ -65,7 +65,7 @@ class Index:
         conn.close()
 
     # persist zhidao index
-    def persist(self, db_path):
+    def persist_zhidao(self, db_path):
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
@@ -76,7 +76,7 @@ class Index:
         for k, v in self.postings_lists_zhidao.items():
             doc_list = '\n'.join(map(str, v[1]))
             t = (k, v[0], doc_list)
-            c.execute("INSERT INTO baike_postings VALUES(?, ?, ?)", t)
+            c.execute("INSERT INTO zhidao_postings VALUES(?, ?, ?)", t)
         conn.commit()
         conn.close()
 
@@ -84,58 +84,60 @@ class Index:
         config = configparser.ConfigParser()
         config.read(self.config_path, self.config_encoding)
         # read baike data into a list
-        files = utils.readBaike(config['DEFAULT']['doc_dir_path'], config['DEFAULT']['doc_encoding'])
+        files = utils.readBaike(config['DEFAULT']['baike_dir_path'], config['DEFAULT']['doc_encoding'])
         avgLen = 0
-        docid = -1
         for f in files:
-            title = f[0]
-            body = f[1]
+            docid = int(f[0])
+            title = f[1]
+            body = f[2]
             seg_list = jieba.lcut(title + "。" + body, cut_all=False)
             ld, cleaned_dict = self.clean_list(seg_list)
             avgLen = avgLen + ld
-            docid += 1
             for k, v in cleaned_dict.items():
                 d = Doc(docid, v, ld)
-                if k in self.postings_lists:
-                    self.postings_lists[k][0] = self.postings_lists[k][0] + 1
-                    self.postings_lists[k][1].append(d)
+                if k in self.postings_lists_baike:
+                    self.postings_lists_baike[k][0] = self.postings_lists_baike[k][0] + 1
+                    self.postings_lists_baike[k][1].append(d)
                 else:
-                    self.postings_lists[k] = [1, [d]] 
+                    self.postings_lists_baike[k] = [1, [d]] 
         avgLen = avgLen / len(files)
         config.set('DEFAULT', 'avg_l_baike', str(avgLen))
         config.set('DEFAULT', 'N_baike', str(len(files)))
         with open(self.config_path, 'w', encoding=self.config_encoding) as configF:
             config.write(configF)
-        self.persist(config['DEFAULT']['db_path'])
+        self.persist_baidu(config['DEFAULT']['db_path_baike'])
 
     def construct_postlings_lists_zhidao(self):
         config = configparser.ConfigParser()
         config.read(self.config_path, self.config_encoding)
-        # read baike data into a list
-        files = utils.readZhidao(config['DEFAULT']['doc_dir_path'], config['DEFAULT']['doc_encoding'])
+        # read zhidao data into a list
+        files = utils.readZhidao(config['DEFAULT']['zhidao_dir_path'], config['DEFAULT']['doc_encoding'])
         avgLen = 0
-        docid = -1
         for f in files:
-            title = f[0]
-            body = f[1]
-            seg_list = jieba.lcut(title + "。" + body, cut_all=False)
+            docid = int(f[0])
+            title = f[1]
+            body = f[2]
+            # this line needs to be re-considered
+            # seg_list = jieba.lcut(title + "。" + body, cut_all=False)
+            seg_list = jieba.lcut(title, cut_all=False)
             ld, cleaned_dict = self.clean_list(seg_list)
             avgLen = avgLen + ld
             docid += 1
             for k, v in cleaned_dict.items():
                 d = Doc(docid, v, ld)
-                if k in self.postings_lists:
-                    self.postings_lists[k][0] = self.postings_lists[k][0] + 1
-                    self.postings_lists[k][1].append(d)
+                if k in self.postings_lists_zhidao:
+                    self.postings_lists_zhidao[k][0] = self.postings_lists_zhidao[k][0] + 1
+                    self.postings_lists_zhidao[k][1].append(d)
                 else:
-                    self.postings_lists[k] = [1, [d]] 
+                    self.postings_lists_zhidao[k] = [1, [d]] 
         avgLen = avgLen / len(files)
         config.set('DEFAULT', 'avg_l_zhidao', str(avgLen))
         config.set('DEFAULT', 'N_zhidao', str(len(files)))
         with open(self.config_path, 'w', encoding=self.config_encoding) as configF:
             config.write(configF)
-        self.persist(config['DEFAULT']['db_path'])
+        self.persist_zhidao(config['DEFAULT']['db_path_zhidao'])
 
 if __name__ == '__main__':
-    baikeIndex = Index("./config.ini", "utf-8")
-    baikeIndex.construct_postlings_lists_baike()
+    IndexManager = Index("./config.ini", "utf-8")
+    # IndexManager.construct_postlings_lists_baike()
+    IndexManager.construct_postlings_lists_zhidao()
