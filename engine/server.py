@@ -39,7 +39,7 @@ def search_images(docs):
 #     return "Hello World!"
 
 def handle_query(args):
-    print(args)
+    # print(args)
     keyword = args["q"]
     qa = args["qaSearch"]
     img = args["imageSearch"]
@@ -54,6 +54,7 @@ def handle_query(args):
             if f > 20:
                 ids = ids[:20]
             No_overlap = set()
+            new_id = []
             for id in ids:
                 row = json.loads(BaikeData.loc[id].to_json())
                 len_b = len(No_overlap)
@@ -61,12 +62,13 @@ def handle_query(args):
                 len_a = len(No_overlap)
                 if len_b == len_a:
                     continue
+                new_id.append(id)
                 row['type'] = 1
                 if len(row['text']) > 50:
                     row['text'] = row['text'][:50]
                 value.append(row)
             if img == True:
-                imgL = search_images(ids)
+                imgL = search_images(new_id)
 
     if qa == True:
         f, score = engine.BM25_zhidao(keyword)
@@ -82,13 +84,24 @@ def handle_query(args):
                 if (len(row['text'])) > 50:
                     row['text'] = row['text'][:50]
                 value.append(row)
-    if baike != True and img == True:
+
+    if img == True and baike != True:
         f, score = engine.BM25_baike(keyword)
         if f > 0:
             ids = [i for i, d in score]
-            if f > 30:
-                ids = ids[:30]
-                imgL = search_images(ids)
+            if f > 20:
+                ids = ids[:20]
+            No_overlap = set()
+            new_id = []
+            for id in ids:
+                row = json.loads(BaikeData.loc[id].to_json())
+                len_b = len(No_overlap)
+                No_overlap.add(row['keyword'])
+                len_a = len(No_overlap)
+                if len_b == len_a:
+                    continue
+                new_id.append(id)
+            imgL = search_images(new_id)
 
     d['link'] = value
     d['img'] = ["http://10.162.167.234/images/" + imgL[i] for i in range(len(imgL))]

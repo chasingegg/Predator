@@ -31,9 +31,9 @@
 \maketitle
 
 \begin{abstract}
-In this project, first we crawl Baidu Baike and Baidu Zhidao with more than 10,000 entried. We try breadth-first search strategy and best priority search strategy for web information retrieve.
+In this project, first we crawl Baidu Baike and Baidu Zhidao with more than 10,000 entries. We try breadth-first search strategy and best priority search strategy for web information retrieve.
 Then We build inverted index from scratch based on the data. Finally, we implement a user-friendly 
-frontend interface to perform queries easily. 
+frontend interface to perform queries easily.  
 \end{abstract}
 
 
@@ -101,10 +101,56 @@ We are required to build indexes and/or other data structures to support four ki
 For Baidu Baike content, we use a breadth-first search strategy. The breadth-first search strategy refers to the next level of search after completing the current level of search in the crawling process. The design and implementation of this algorithm is relatively simple. In order to cover as many web pages as possible, a breadth-first search method is generally used. There are also many studies that apply breadth-first search strategies to focused crawlers. The basic idea is that there is a high probability that a web page with a certain URL within a certain link distance has a topic relevance. Another method is to combine breadth-first search with web filtering technology, first use the breadth-first strategy to crawl web pages, and then filter out irrelevant web pages. The disadvantage of these methods is that as the number of crawled web pages increases, a large number of irrelevant web pages will be downloaded and filtered, and the efficiency of the algorithm will become lower.
 \newline
 For Baidu Zhidao content, we use best priority search strategy. The best priority search strategy predicts the similarity between the candidate URL and the target webpage, or the relevance to the topic according to a certain webpage analysis algorithm, and selects one or several URLs with the best evaluation to perform the crawling. It only accesses pages that have been predicted to be "useful" by web analytics algorithms. One problem that exists is that many related web pages on the crawler crawl path may be ignored because the best priority strategy is a local optimal search algorithm. Therefore, it is necessary to improve the best priority combined with the specific application to jump out of the local best. A detailed discussion will be made in conjunction with the web page analysis algorithm in Section 4. Studies have shown that such closed-loop adjustments can reduce the number of irrelevant pages by 30\% to 90\%.
+\newline Finally our data is stored in \textbf{baike.csv} and \textbf{zhidao.csv}, for images, we store the mapping relationship between 
+docid and the location path of images, the relation is in \textbf{images.csv}. The data format is as follows.
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.1]{fig/3}
+\caption{baike data format}
+\label{fig:label}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.3]{fig/4}
+\caption{zhidao data format}
+\label{fig:label}
+\end{figure}
+
 
 \subsection{Search Engine}
-TODO
+As is known, the baike data and zhidao data actually follow the similar formats. Therefore, 
+here we use the baike data as the example, and for image retrieval, we just get docids to map to the corresponding images.
 
+\subsubsection{Indexing}
+An inverted index (also referred to as a postings file or inverted file) is a database index storing a mapping from content, such as words or numbers, to its locations in a table, or in a document or a set of documents (named in contrast to a forward index, which maps from documents to content). The purpose of an inverted index is to allow fast full-text searches, at a cost of increased processing when a document is added to the database. 
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.2]{fig/5}
+\caption{Indexing Illustration}
+\label{fig:label}
+\end{figure}
+\newline
+Here we use \textbf{jieba} library to extract keywords from docs. When user types a query, 
+we also extract keywords from the query and to find the related docs by postings.
+
+\subsubsection{Ranking}
+After we get the doc candidates, we would rank the candidates and return the most relevant docs. 
+Instead of using the traditional tf-idf method, we use a better algorithm called \textbf{BM25}. BM25 (BM stands for Best Matching) is a ranking function used by search engines to estimate the relevance of documents to a given search query. It is based on the probabilistic retrieval framework developed in the 1970s and 1980s by Stephen E. Robertson, Karen Spärck Jones, and others.
+\newline
+BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document, regardless of their proximity within the document. It is a family of scoring functions with slightly different components and parameters. One of the most prominent instantiations of the function is as follows.
+\newline
+Given a query Q, containing keywords {$q_{1}$,...,$q_{n}$}, the BM25 score of a document D is:
+\begin{equation}
+    s=\\ \sum_{i=1}^{n}{IDF(q_i)\frac{f(q_i, D)\cdot (k_1+1)}{f(q_i+D)+k_1\cdot (1-b+b\cdot\frac{|D|}{avgdl})}}
+\end{equation}
+Where $f(q_i, D)$ is $q_i's$ term frequency in the document D, |D| is the length of the document D in words, 
+and avgdl is the average length in the text collection from which documents are drawn. $k_{1}$ and b are free parameters. IDF($q_i$) is the IDF (inverse document frequency) weight of the query term $q_{i}$, 
+it is usually computed as:
+\begin{equation}
+    IDF(q_i)=log\frac{N-n(q_i)+0.5}{n(q_i)+0.5}
+\end{equation}
+Where $N$ is the total number of documents in the collection, and 
+$n(q_i)$ is the number of documents containing $q_i$.
 \subsection{Website}
 Our searcher consists of four different template pages: index page, search page, baike page and zhidao page. 
 \newline
@@ -117,26 +163,72 @@ Each link in the searching result has its own globally identity. When users clic
 
 \section{Result}
 
-To show the preformance of our baidu searcher, we choose some examples queries and search the result in different condition. Figures below shows the results from searching query “ TODO!!”  
-
-
-We limit the coverage of this searching query to zhidao, the results are shown below:
-
-
-
-Besides, we choose another searching query “TODO!!!” and the results are shown below:
-
-
-We limit the coverage of this searching query to baike, the results are shown below:
-
+To show the preformance of our baidu searcher, we choose some examples queries and search the result in different condition. 
+\newline
+Figures below shows the results from searching a keyword.
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.2]{fig/6}
+\caption{result for a keyword}
+\label{fig:label}
+\end{figure}
+\newline
+Also we can type a question.
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.13]{fig/7}
+\caption{result for a question}
+\label{fig:label}
+\end{figure}
+\newline
+We can limit the coverage of this query to baike, the results are shown below:
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.1]{fig/8}
+\caption{baike result}
+\label{fig:label}
+\end{figure}
+\newline
+Also we can click the link to see the whole content.
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.1]{fig/9}
+\caption{baike whole content}
+\label{fig:label}
+\end{figure}
+We can also limit the coverage of this query to baike, the results are shown below:
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.13]{fig/10}
+\caption{zhidao result}
+\label{fig:label}
+\end{figure}
+\newline
+Similar to baike, we can also see the whole content of zhidao.
+\begin{figure}[!h]
+\centering
+\includegraphics[scale=0.13]{fig/11}
+\caption{zhidao whole content}
+\label{fig:label}
+\end{figure}
+\newline
+We can also limit the coverage of this query to images, the result are as follows.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.1]{fig/12}
+\caption{image result}
+\label{fig:label}
+\end{figure}
 
 \section{Conclusion}
-
+In this project, we have learned a lot in writing a web crawler. And what's more, we also implement the indexing 
+and ranking algorithm learned from class and Internet by ourselves, without using any open-source retrieval libraries. 
+Also, we pay lots of attention on UI design to make it easier and intuitive for users to use.
 \section{Acknowledgments}
 We are very grateful to the teachers and TAs for their help during this semester. 
 
-\bibliographystyle{unsrt}
-\bibliography{example}
+% \bibliographystyle{unsrt}
+% \bibliography{example}
 
 \end{document}
 
