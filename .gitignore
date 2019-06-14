@@ -1,9 +1,9 @@
-.bbl
-.fls
-.synctex.gz
-.aux
-.blg
-.fdb_latexmk
+*.bbl
+*.fls
+*.synctex.gz
+*.aux
+*.blg
+*.fdb_latexmk
 data/
 #engine/test/
 # Byte-compiled / optimized / DLL files

@@ -139,5 +139,5 @@ class Index:
 
 if __name__ == '__main__':
     IndexManager = Index("./config.ini", "utf-8")
-    # IndexManager.construct_postlings_lists_baike()
+    IndexManager.construct_postlings_lists_baike()
     IndexManager.construct_postlings_lists_zhidao()

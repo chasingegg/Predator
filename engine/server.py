@@ -76,8 +76,15 @@ def handle_query(args):
             ids = [i for i, d in score]
             if f > 20:
                 ids = ids[:20]
+            No_overlap = set()
+
             for id in ids:
                 row = json.loads(ZhidaoData.loc[id].to_json())
+                len_b = len(No_overlap)
+                No_overlap.add(row['keyword'])
+                len_a = len(No_overlap)
+                if len_b == len_a:
+                    continue
                 row['docid'] = id
                 row['type'] = 0
                 row['text'] = row['text'].strip()

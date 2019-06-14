@@ -94,6 +94,8 @@ We are required to build indexes and/or other data structures to support four ki
     \item Advanced search: let user enter search keyword for a particular region in the page, e.g., search in the Baidu Baike, the question of Baidu Zhidao, the answer of Baidu Zhidao or the images. The advance search should give the interface to allow the user to choose what region to search from. Appropriate regional/zonal indexes need to be build. 
     \item As each question in Baidu Zhidao could have different answers, you are required to delete unrelated answers and recommend a ranked list of answers. You may consider whether the answer is accepted by the question owner or the number of times the answer is considered useful.
 \end{itemize}
+We divide the project into three parts, crawler, search engine and frontend. Each of us 
+is responsible for one part.
 
 \section{Ideas and Methods}
 
@@ -165,10 +167,10 @@ Each link in the searching result has its own globally identity. When users clic
 
 To show the preformance of our baidu searcher, we choose some examples queries and search the result in different condition. 
 \newline
-Figures below shows the results from searching a keyword.
+Figures below shows the results of searching a keyword.
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.2]{fig/6}
+\includegraphics[scale=0.17]{fig/6}
 \caption{result for a keyword}
 \label{fig:label}
 \end{figure}
@@ -184,7 +186,7 @@ Also we can type a question.
 We can limit the coverage of this query to baike, the results are shown below:
 \begin{figure}[ht]
 \centering
-\includegraphics[scale=0.1]{fig/8}
+\includegraphics[scale=0.13]{fig/8}
 \caption{baike result}
 \label{fig:label}
 \end{figure}
@@ -196,7 +198,8 @@ Also we can click the link to see the whole content.
 \caption{baike whole content}
 \label{fig:label}
 \end{figure}
-We can also limit the coverage of this query to baike, the results are shown below:
+\newline
+We can also limit the coverage of this query to zhidao, the results are shown below:
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.13]{fig/10}
@@ -225,7 +228,7 @@ In this project, we have learned a lot in writing a web crawler. And what's more
 and ranking algorithm learned from class and Internet by ourselves, without using any open-source retrieval libraries. 
 Also, we pay lots of attention on UI design to make it easier and intuitive for users to use.
 \section{Acknowledgments}
-We are very grateful to the teachers and TAs for their help during this semester. 
+We are very grateful to Prof. Zhu and TAs for their help during this semester. 
 
 % \bibliographystyle{unsrt}
 % \bibliography{example}
